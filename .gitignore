@@ -1,7 +1,5 @@
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 step-by-step.txt
-/src/controllers
-/src/routes
 
 # dependencies
 /node_modules
