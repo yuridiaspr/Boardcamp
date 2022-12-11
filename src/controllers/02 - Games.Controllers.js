@@ -8,7 +8,7 @@ export async function insertGame(req, res) {
   }
 
   if (stockTotal === "" || stockTotal <= 0) {
-    return res.status(401).send("A quantidade em estoque precisa ser positiva");
+    return res.status(400).send("A quantidade em estoque precisa ser positiva");
   }
 
   if (pricePerDay === "" || pricePerDay <= 0) {
@@ -26,7 +26,7 @@ export async function insertGame(req, res) {
     );
 
     if (categoryAlreadyExist.rows.length === 0) {
-      return res.status(409).send("Categoria de jogo não existe!");
+      return res.status(400).send("Categoria de jogo não existe!");
     }
 
     const nameAlreadyExist = await connectionDB.query(
@@ -44,6 +44,15 @@ export async function insertGame(req, res) {
     );
 
     return res.sendStatus(201);
+  } catch (err) {
+    res.status(500).send(err.message);
+  }
+}
+
+export async function findAllGames(req, res) {
+  try {
+    const { rows } = await connectionDB.query("SELECT * FROM games;");
+    res.send(rows);
   } catch (err) {
     res.status(500).send(err.message);
   }
