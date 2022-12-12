@@ -60,7 +60,6 @@ export async function findAllGames(req, res) {
       res.send(rows);
     } else {
       name = name + "%";
-      console.log(name);
       const { rows } = await connectionDB.query(
         'SELECT games.*, categories.name as "categoryName" FROM games JOIN categories ON games."categoryId"=categories.id WHERE games.name LIKE $1;',
         [name]

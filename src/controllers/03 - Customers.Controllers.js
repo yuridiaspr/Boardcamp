@@ -52,7 +52,27 @@ export async function insertCustomer(req, res) {
     res.status(500).send(err.message);
   }
 }
-export async function findAllCustomers(req, res) {}
+export async function findAllCustomers(req, res) {
+  let { cpf } = req.query;
+
+  try {
+    if (cpf == undefined) {
+      const { rows } = await connectionDB.query(
+        "SELECT *, birthday::text FROM customers;"
+      );
+      res.send(rows);
+    } else {
+      cpf = cpf + "%";
+      const { rows } = await connectionDB.query(
+        "SELECT *, birthday::text FROM customers WHERE cpf LIKE $1;",
+        [cpf]
+      );
+      res.send(rows);
+    }
+  } catch (err) {
+    res.status(500).send(err.message);
+  }
+}
 
 export async function findCustomer(req, res) {}
 
