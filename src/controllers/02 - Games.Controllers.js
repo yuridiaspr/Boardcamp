@@ -50,8 +50,38 @@ export async function insertGame(req, res) {
 }
 
 export async function findAllGames(req, res) {
+  let { name } = req.query;
+
   try {
-    const { rows } = await connectionDB.query("SELECT * FROM games;");
+    if (name == undefined) {
+      const { rows } = await connectionDB.query(
+        'SELECT games.*, categories.name as "categoryName" FROM games JOIN categories ON games."categoryId"=categories.id;'
+      );
+      res.send(rows);
+    } else {
+      name = name + "%";
+      console.log(name);
+      const { rows } = await connectionDB.query(
+        'SELECT games.*, categories.name as "categoryName" FROM games JOIN categories ON games."categoryId"=categories.id WHERE games.name LIKE $1;',
+        [name]
+      );
+      res.send(rows);
+    }
+  } catch (err) {
+    res.status(500).send(err.message);
+  }
+}
+
+export async function findSomeGames(req, res) {
+  console.log("Entrei em 02");
+  const GG = req.params;
+
+  try {
+    return res.send(GG);
+    const { rows } = await connectionDB.query(
+      'SELECT games.*, categories.name as "categoryName" FROM games JOIN categories ON games."categoryId"=categories.id;'
+    );
+
     res.send(rows);
   } catch (err) {
     res.status(500).send(err.message);
