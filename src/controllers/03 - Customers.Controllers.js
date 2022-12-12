@@ -74,7 +74,24 @@ export async function findAllCustomers(req, res) {
   }
 }
 
-export async function findCustomer(req, res) {}
+export async function findCustomer(req, res) {
+  const { id } = req.params;
+
+  try {
+    const { rows } = await connectionDB.query(
+      "SELECT *, birthday::text FROM customers WHERE id=$1;",
+      [id]
+    );
+
+    if (rows.length === 0) {
+      return res.status(404).send("Id não existe");
+    }
+
+    res.send(rows);
+  } catch (err) {
+    res.status(500).send(err.message);
+  }
+}
 
 export async function upadateCustomer(req, res) {
   const { name, phone, cpf, birthday } = req.body;
