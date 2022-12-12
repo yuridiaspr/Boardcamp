@@ -71,19 +71,3 @@ export async function findAllGames(req, res) {
     res.status(500).send(err.message);
   }
 }
-
-export async function findSomeGames(req, res) {
-  console.log("Entrei em 02");
-  const GG = req.params;
-
-  try {
-    return res.send(GG);
-    const { rows } = await connectionDB.query(
-      'SELECT games.*, categories.name as "categoryName" FROM games JOIN categories ON games."categoryId"=categories.id;'
-    );
-
-    res.send(rows);
-  } catch (err) {
-    res.status(500).send(err.message);
-  }
-}
