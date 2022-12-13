@@ -103,11 +103,7 @@ export async function endRental(req, res) {
     expectedDate.setDate(expectedDate.getDate() + daysRented);
     expectedDate = dayjs(expectedDate).format("YYYY-MM-DD");
 
-    let teste = new Date(dayjs());
-    teste.setDate(teste.getDate() + 2);
-    teste = dayjs(teste).format("YYYY-MM-DD");
-
-    const returnDate = dayjs(teste).format("YYYY-MM-DD");
+    const returnDate = dayjs().format("YYYY-MM-DD");
     let delayFee = null;
 
     if (expectedDate < returnDate) {
