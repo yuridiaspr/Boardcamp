@@ -130,4 +130,14 @@ export async function endRental(req, res) {
 
 export async function deleteRental(req, res) {}
 
-export async function findAllRentals(req, res) {}
+export async function findAllRentals(req, res) {
+  try {
+    const showRentals = await connectionDB.query(
+      'SELECT rentals.*, customers.id, customers.name  AS CustomerName, games.id, games.name, games."categoryId", categories.name AS categoryName FROM rentals JOIN customers ON rentals."customerId"=customers.id JOIN games ON rentals."gameId"=games.id JOIN categories ON games."categoryId"=categories.id;'
+    );
+
+    res.send(showRentals.rows);
+  } catch (err) {
+    res.status(500).send(err.message);
+  }
+}
