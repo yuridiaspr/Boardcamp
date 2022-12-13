@@ -33,15 +33,25 @@ export async function insertRental(req, res) {
 
     const { name, stockTotal, pricePerDay } = gameAlreadyExist.rows[0];
 
-    const gameAvailable = await connectionDB.query(
-      'SELECT * FROM rentals WHERE id=$1 AND "returnDate" IS NULL;',
+    const borrowedGames = await connectionDB.query(
+      'SELECT * FROM rentals WHERE "gameId"=$1 AND "returnDate" IS NULL;',
       [gameId]
     );
 
-    if (
-      gameAvailable.rows.length !== 0 &&
-      gameAvailable.rows.length <= stockTotal
-    ) {
+    const returnedGames = await connectionDB.query(
+      'SELECT * FROM rentals WHERE "gameId"=$1 AND "returnDate" IS NOT NULL;',
+      [gameId]
+    );
+
+    const gamesUnavailable =
+      borrowedGames.rows.length - returnedGames.rows.length;
+
+    console.log(borrowedGames.rows.length);
+    console.log(returnedGames.rows.length);
+    console.log(gamesUnavailable);
+    console.log(stockTotal);
+
+    if (borrowedGames.rows.length !== 0 && stockTotal - gamesUnavailable <= 0) {
       return res
         .status(400)
         .send(`Todas as unidades de ${name} estão alugados(as)`);
@@ -51,6 +61,74 @@ export async function insertRental(req, res) {
     const returnDate = null,
       delayFee = null;
 
+    // await connectionDB.query(
+    //   'INSERT INTO rentals ("customerId", "gameId", "rentDate", "daysRented", "returnDate", "originalPrice", "delayFee") VALUES ($1, $2, $3, $4, $5, $6, $7);',
+    //   [
+    //     customerId,
+    //     gameId,
+    //     rentDate,
+    //     daysRented,
+    //     returnDate,
+    //     originalPrice,
+    //     delayFee,
+    //   ]
+    // );
+
+    return res.sendStatus(201);
+  } catch (err) {
+    res.status(500).send(err.message);
+  }
+}
+
+export async function endRental(req, res) {
+  const { id } = req.params;
+
+  try {
+    // Check if rental id exists
+    const rentalAlreadyExist = await connectionDB.query(
+      "SELECT * FROM rentals WHERE id=$1;",
+      [id]
+    );
+
+    if (rentalAlreadyExist.rows.length === 0) {
+      return res.status(404).send("Aluguel não cadastrado");
+    }
+
+    // Check if the rent is already paid
+    const rentAlreadyPaid = rentalAlreadyExist.rows[0].returnDate;
+
+    if (rentAlreadyPaid !== null) {
+      return res.status(400).send("Jogo já está pago");
+    }
+
+    // Calculate delayFee
+    const { customerId, gameId, rentDate, daysRented, originalPrice } =
+      rentalAlreadyExist.rows[0];
+
+    const game = await connectionDB.query("SELECT * FROM games WHERE id=$1;", [
+      gameId,
+    ]);
+
+    const { pricePerDay } = game.rows[0];
+
+    let expectedDate = new Date(rentDate);
+    expectedDate.setDate(expectedDate.getDate() - daysRented);
+    expectedDate = dayjs(expectedDate).format("YYYY-MM-DD");
+
+    const returnDate = dayjs().format("YYYY-MM-DD");
+    let delayFee = null;
+
+    if (expectedDate < returnDate) {
+      const newReturn = new Date(returnDate);
+      const newExpected = new Date(expectedDate);
+
+      let lateDays = newReturn.getTime() - newExpected.getTime();
+      lateDays = lateDays / (24 * 3600 * 1000);
+
+      delayFee = pricePerDay * parseInt(lateDays);
+    }
+
+    // Insert data
     await connectionDB.query(
       'INSERT INTO rentals ("customerId", "gameId", "rentDate", "daysRented", "returnDate", "originalPrice", "delayFee") VALUES ($1, $2, $3, $4, $5, $6, $7);',
       [
@@ -69,8 +147,6 @@ export async function insertRental(req, res) {
     res.status(500).send(err.message);
   }
 }
-
-export async function endRental(req, res) {}
 
 export async function deleteRental(req, res) {}
 
